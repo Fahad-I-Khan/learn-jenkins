@@ -28,7 +28,7 @@
 # EXPOSE 8080
 # CMD ["./api"]
 
-FROM golang:1.25.5-alpine3.23 AS builder
+FROM golang:1.25.5 AS builder
 
 WORKDIR /app
 
