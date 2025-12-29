@@ -1,4 +1,4 @@
-module github.com/Fahad-I-Khan/learn-jenkins
+module github.com/fahad-i-khan/learn-jenkins
 
 go 1.25.4
 
