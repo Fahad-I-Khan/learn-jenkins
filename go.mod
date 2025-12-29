@@ -3,7 +3,6 @@ module github.com/fahad-i-khan/learn-jenkins
 go 1.25.5
 
 require github.com/gin-gonic/gin v1.11.0
-
 require (
 	github.com/bytedance/sonic v1.14.0 // indirect
 	github.com/bytedance/sonic/loader v0.3.0 // indirect

@@ -40,7 +40,7 @@ COPY . .
 # 🔥 CI step
 RUN go test ./...
 
-RUN go build -o api .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o api .
 
 FROM alpine:3.23
 

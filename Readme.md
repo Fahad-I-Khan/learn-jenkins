@@ -148,6 +148,75 @@ docker run -d \
   jenkins-with-docker
 ```
 
+#### Jenkins pipeline script
+
+```
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "go-jenkins-ci"
+        CONTAINER_NAME = "go-jenkins-ci"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Fahad-I-Khan/learn-jenkins.git'
+            }
+        }
+        
+        stage('Debug Workspace') {
+            steps {
+                sh '''
+                echo "==== LIST ROOT ===="
+                ls -la
+        
+                echo "==== go.mod ===="
+                cat go.mod || echo "go.mod NOT FOUND"
+        
+                echo "==== pwd ===="
+                pwd
+                '''
+            }
+        }
+
+
+        stage('Go Test (Dockerized)') {
+            steps {
+                sh '''
+                docker run --rm \
+                  -v "$WORKSPACE":/app \
+                  -w /app \
+                  golang:1.25.5-alpine3.23 \
+                  sh -c "go test ./..."
+                '''
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME:latest .'
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                docker rm -f $CONTAINER_NAME || true
+                docker run -d \
+                  -p 8090:8080 \
+                  --name $CONTAINER_NAME \
+                  $IMAGE_NAME:latest
+                '''
+            }
+        }
+    }
+}
+```
+
 ---------------------------------------
 
 ### For Git
