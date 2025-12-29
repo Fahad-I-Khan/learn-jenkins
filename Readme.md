@@ -136,6 +136,17 @@ And this volume will not appear in docker desktop. It's being saved in machine.
 ```
 docker.sock 
 ```
+#### Run as root user to avoid permission issue
+```
+docker run -d \
+  --name jenkins \
+  -p 8081:8080 \
+  -p 50000:50000 \
+  -v ~/jenkins_home:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --user root \
+  jenkins-with-docker
+```
 
 ---------------------------------------
 
