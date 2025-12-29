@@ -137,3 +137,11 @@ And this volume will not appear in docker desktop. It's being saved in machine.
 docker.sock 
 ```
 
+---------------------------------------
+
+### For Git
+
+When git push was not working.
+```
+ git config --global push.autoSetupRemote true
+ ```
