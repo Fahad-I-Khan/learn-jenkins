@@ -217,192 +217,29 @@ pipeline {
 }
 ```
 
-------------
-
-Excellent 👍
-This is **exactly** the right next step.
-Tagging images with **Git commit SHA** is a **core DevOps best practice**, and interviewers *love* this topic.
-
-I’ll explain **why**, then **how**, then we’ll **modify your Jenkins pipeline** step by step.
-
----
-
-# 🔖 Why tag Docker images with Git commit SHA?
-
-### ❌ Problem with `latest`
-
-Right now you’re building:
-
-```bash
-docker build -t go-jenkins-ci .
-```
-
-That means:
-
-* Every build overwrites the **same image**
-* You don’t know **which code** is running
-* Rollbacks are **painful**
-* Debugging production issues is **guesswork**
-
-This is **not acceptable** in real systems.
-
----
-
-## ✅ What Git SHA tagging solves
-
-Each Git commit has a **unique SHA**:
+#### Ask git directly 
 
 ```
-7ecb7d2cbe0af52c5b02b1cddd0117486fb02023
+SHORT_SHA=$(git rev-parse --short HEAD)
 ```
 
-When you tag images like:
-
 ```
-go-jenkins-ci:7ecb7d2
-```
+stage('Docker Build (Tests enforced)') {
+    steps {
+        sh '''
+        SHORT_SHA=$(git rev-parse --short HEAD)
+        echo "Building image with tag: $SHORT_SHA"
 
-You get:
-
-### 🧠 Benefits (very important)
-
-| Benefit             | Why it matters                     |
-| ------------------- | ---------------------------------- |
-| 🔍 Traceability     | You know **exact code** is running |
-| 🔁 Easy rollback    | Redeploy previous image instantly  |
-| 🧪 Debugging        | Match logs → container → commit    |
-| 🚀 CI/CD safety     | No accidental overwrites           |
-| 📦 Immutable builds | “Build once, deploy many times”    |
-
-> **Golden DevOps rule:**
-> 👉 *A Docker image must be immutable and traceable*
-
----
-
-## 🏗️ Industry-standard tagging strategy
-
-Most companies use **multiple tags** per build:
-
-```
-myapp:7ecb7d2
-myapp:build-42
-myapp:latest   (optional)
-```
-
-But **commit SHA is mandatory**.
-
----
-
-# 🧪 How Jenkins gets Git commit SHA
-
-Jenkins automatically provides:
-
-```bash
-GIT_COMMIT
-```
-
-Example:
-
-```bash
-echo $GIT_COMMIT
-# 7ecb7d2cbe0af52c5b02b1cddd0117486fb02023
-```
-
-We’ll shorten it to 7 chars (standard practice).
-
----
-
-# ✍️ Step 1: Update Jenkinsfile
-
-### ✅ Replace your Docker build stage with this
-
-```groovy
-stage('Docker Build (Tag with Git SHA)') {
-  sh '''
-    SHORT_SHA=$(echo $GIT_COMMIT | cut -c1-7)
-    echo "Building image with tag: $SHORT_SHA"
-
-    docker build -t go-jenkins-ci:$SHORT_SHA .
-    docker tag go-jenkins-ci:$SHORT_SHA go-jenkins-ci:latest
-  '''
+        docker build -t go-jenkins-ci:$SHORT_SHA .
+        docker tag go-jenkins-ci:$SHORT_SHA go-jenkins-ci:latest
+        '''
+    }
 }
 ```
-
-### 🧠 What’s happening (line by line)
-
-```bash
-SHORT_SHA=$(echo $GIT_COMMIT | cut -c1-7)
-```
-
-✔ Extract short commit hash
-
-```bash
-docker build -t go-jenkins-ci:$SHORT_SHA .
-```
-
-✔ Immutable, traceable image
-
-```bash
-docker tag go-jenkins-ci:$SHORT_SHA go-jenkins-ci:latest
-```
-
-✔ Optional convenience tag (never rely on it in prod)
-
----
-
-## 🔍 Verify locally (very important)
-
-After Jenkins runs, execute on host:
-
-```bash
-docker images | grep go-jenkins-ci
-```
-
-You should see something like:
-
-```
-go-jenkins-ci   7ecb7d2   276498071fed   10 minutes ago
-go-jenkins-ci   latest    276498071fed   10 minutes ago
-```
-
-✔ Same IMAGE ID
-✔ Different tags
-✔ Perfect setup
-
----
-
-# 🧪 Update Run Container stage
-
-Now explicitly run **SHA-tagged image**:
-
-```groovy
-stage('Run Container') {
-  sh '''
-    SHORT_SHA=$(echo $GIT_COMMIT | cut -c1-7)
-
-    docker rm -f go-jenkins-ci || true
-    docker run -d --name go-jenkins-ci -p 8080:8080 go-jenkins-ci:$SHORT_SHA
-
-    sleep 3
-    curl -f http://localhost:8080/health
-  '''
-}
-```
-
-This guarantees:
-
-* You are running **exactly what was built**
-* No hidden mismatches
-
----
-
-# 🧠 This is how to explain in interviews
-
-> “We tag Docker images with Git commit SHA to ensure immutability, traceability, and safe rollbacks. Each deployment maps directly to a commit, making debugging and rollback deterministic.”
-
-🔥 That answer alone sets you apart.
-
----
+This:
+- Always works
+- Works locally, in Jenkins, in Docker
+- Is CI-tool independent
 
 ---------------------------------------
 
