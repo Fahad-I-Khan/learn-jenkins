@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,8 +20,17 @@ func TestHealthHandler(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", w.Code)
 	}
-	expected := `{"status":"ok"}`
-	if w.Body.String() != expected {
-		t.Fatalf("expected body %s, got %s", expected, w.Body.String())
+
+	var resp map[string]string
+	if err := json.Unmarshal(w.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("invalid json response: %v", err)
+	}
+
+	if resp["status"] != "ok" {
+		t.Fatalf("expected status=ok, got %s", resp["status"])
+	}
+
+	if resp["message"] != "Testing CI/CD Pipeline" {
+		t.Fatalf("unexpected message: %s", resp["message"])
 	}
 }
