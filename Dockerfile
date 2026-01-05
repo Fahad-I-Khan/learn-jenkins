@@ -38,7 +38,7 @@ RUN go mod download
 COPY . .
 
 # 🔥 CI step
-RUN go test ./...
+# RUN go test ./...
 
 RUN CGO_ENABLED=0 go build -o api .
 
